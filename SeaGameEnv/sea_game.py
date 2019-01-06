@@ -22,7 +22,7 @@ LEFT = 2
 UP = 3
 NOMOVE = 4
 
-POOL = 8
+POOL = 4
 
 PENARTY = 0.1
 NO_PENALTY_MAX = 2
