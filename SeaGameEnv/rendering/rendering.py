@@ -1,4 +1,5 @@
-import sys, pygame
+import sys
+import pygame
 from asyncio import sleep
 from numpy.core.multiarray import ndarray
 from typing import List, Any

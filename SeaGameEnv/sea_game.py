@@ -22,8 +22,6 @@ LEFT = 2
 UP = 3
 NOMOVE = 4
 
-POOL = 4
-
 PENARTY = 0.1
 NO_PENALTY_MAX = 2
 
@@ -73,7 +71,7 @@ class SeaGameEnv(gym.core.Env):
     ship_list: List[Ship]
     tank_list: List[Tank]
 
-    def __init__(self, nb_npc=5, max_step=None, npc_name='*', player_name='Admiral'):
+    def __init__(self, nb_npc=5, max_step=None, npc_name='*', player_name='Admiral', pool=8):
         self.map = np.zeros((256, 512))
         self.ship_map = self.map[:, :256]
         self.tank_map = self.map[:, 256:]
@@ -83,6 +81,8 @@ class SeaGameEnv(gym.core.Env):
         self.nb_step = 0
         self.no_penalty_step = 0
         self.is_test = False
+        self.seed_value = None
+        self.pool = pool
         if max_step:
             self.max_step = max_step
         else:
@@ -92,7 +92,7 @@ class SeaGameEnv(gym.core.Env):
         self.ship_list = [Ship(player_name)] + [ShipAgent(npc_name + str(i + 1)) for i in range(nb_npc)]
 
         self.action_space = gym.spaces.Discrete(len(ACTION_MEANS))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(256//POOL, 512//POOL, 1), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(256//self.pool, 512//self.pool, 1), dtype=np.float32)
         self.obs = self.observe()
 
     def step(self, action: int):
@@ -173,12 +173,16 @@ class SeaGameEnv(gym.core.Env):
         ship_map = np.roll(ship_map, 128-y, axis=0)
         tank_map = np.roll(self.tank_map, 128-x, axis=1)
         tank_map = np.roll(tank_map, 128-y, axis=0)
-        XK = 256//POOL
-        ship_map = ship_map[:XK*POOL, :XK*POOL].reshape(XK, POOL, XK, POOL).sum(axis=(1, 3))
-        tank_map = tank_map[:XK*POOL, :XK*POOL].reshape(XK, POOL, XK, POOL).sum(axis=(1, 3))
+        XK = 256//self.pool
+        ship_map = ship_map[:XK*self.pool, :XK*self.pool].reshape(XK, self.pool, XK, self.pool).sum(axis=(1, 3))
+        tank_map = tank_map[:XK*self.pool, :XK*self.pool].reshape(XK, self.pool, XK, self.pool).sum(axis=(1, 3))
         #self.screen.draw_ship_map(ship_map)
         #self.screen.draw_tank_map(tank_map)
         return np.hstack((ship_map, tank_map))
+
+    def seed(self, seed=None):
+        random.seed(seed)
+        self.seed_value = seed
 
     def reset(self):
 

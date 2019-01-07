@@ -35,6 +35,6 @@ while True:
     obs, reward, done, _ = env.step(action)
     obs = deepcopy(obs)
     env.render()
-    sleep(0.1)
+    sleep(0.2)
     if done:
         env.reset()

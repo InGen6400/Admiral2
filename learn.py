@@ -26,6 +26,7 @@ from train_callback import EpisodeLogger
 WEIGHT_FILE = 'weight.h5'
 MODEL_FILE = 'model.json'
 MODEL_HDF5 = 'model.h5'
+#MODEL_HDF5 = 'model_pool8_input32-64_dense256_dense128.h5'
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -36,16 +37,16 @@ K.set_session(sess)
 if __name__ == '__main__':
     env = SeaGameEnv(nb_npc=5, max_step=600)
     nb_actions = env.action_space.n
-    shape = (1,) + (256//POOL, 512//POOL)
+    shape = (1,) + env.observation_space.shape[:2]//env.pool
     print(shape)
     model = Sequential()
     #model.add(Permute((2, 3, 1), input_shape=shape))
     #model.add(Convolution2D(2, (4, 4), data_format='channels_last'))
     #model.add(Activation('relu'))
     model.add(Flatten(input_shape=shape))
-    model.add(Dense(512))
-    model.add(Activation('relu'))
     model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(Dense(64))
     model.add(Activation('relu'))
     model.add(Dense(nb_actions))
     model.add(Activation('linear'))
@@ -55,19 +56,19 @@ if __name__ == '__main__':
 
     memory = SequentialMemory(limit=3000, window_length=1)
 
-    policy = EpsGreedyQPolicy()
+    policy = BoltzmannQPolicy()
 
     logger = EpisodeLogger()
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=3000, policy=policy,
-                   train_interval=3000, enable_double_dqn=True, gamma=.9, target_model_update=0.01,
+                   train_interval=3000, enable_double_dqn=True, gamma=.9, target_model_update=0.1,
                    enable_dueling_network=True, dueling_type='avg')
     dqn.compile(Adam(lr=0.001), metrics=['mae'])
 
     if os.path.exists(WEIGHT_FILE):
         dqn.load_weights(WEIGHT_FILE)
 
-    history = dqn.fit(env, callbacks=[logger, FileLogger('log.json')], nb_steps=600*1500, visualize=False, verbose=2, log_interval=600)
+    history = dqn.fit(env, callbacks=[logger, FileLogger('log.json')], nb_steps=600*1000, visualize=False, verbose=2, log_interval=600)
 
     plt.plot(logger.rewards.values())
     plt.xlabel("episode")
