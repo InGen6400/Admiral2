@@ -35,18 +35,16 @@ sess = tf.Session(config=config)
 K.set_session(sess)
 
 if __name__ == '__main__':
-    env = SeaGameEnv(nb_npc=5, max_step=600, ship_pool=32)
+    env = SeaGameEnv(nb_npc=5, max_step=600,
+                     ship_pool=2, tank_pool=16)
     nb_actions = env.action_space.n
-    shape = (1,) + (256//env.pool, 512//env.pool)
+    shape = (1, ) + env.observation_space.shape
     print(shape)
+
     model = Sequential()
-    #model.add(Permute((2, 3, 1), input_shape=shape))
-    #model.add(Convolution2D(2, (4, 4), data_format='channels_last'))
-    #model.add(Activation('relu'))
-    model.add(Flatten(input_shape=shape))
-    model.add(Dense(128))
+    model.add(Dense(256, input_shape=shape))
     model.add(Activation('relu'))
-    model.add(Dense(256))
+    model.add(Dense(128))
     model.add(Activation('relu'))
     model.add(Dense(nb_actions))
     model.add(Activation('linear'))
@@ -56,13 +54,12 @@ if __name__ == '__main__':
 
     memory = SequentialMemory(limit=3000, window_length=1)
 
-    policy = EpsGreedyQPolicy(eps=0.23316134447477344)
+    policy = EpsGreedyQPolicy(eps=0.37)
 
     logger = EpisodeLogger()
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=3000, policy=policy,
-                   train_interval=3000, enable_double_dqn=True, gamma=.9, target_model_update=0.1,
-                   enable_dueling_network=True, dueling_type='avg')
+                   train_interval=3000, enable_double_dqn=True, gamma=0.95, target_model_update=0.01)
     dqn.compile(Adam(lr=0.001), metrics=['mae'])
 
     if os.path.exists(WEIGHT_FILE):

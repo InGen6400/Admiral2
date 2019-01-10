@@ -17,7 +17,7 @@ def process_state_batch(batch):
 
 
 def compute_batch_q_values(model, state_batch):
-    batch = process_state_batch(state_batch)
+    batch = np.array(state_batch)
     q_values = model.predict_on_batch(batch)
     assert q_values.shape == (len(state_batch), len(ACTION_MEANS))
     return q_values
