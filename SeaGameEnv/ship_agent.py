@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from SeaGameEnv.sea_game import Ship, NOMOVE, RIGHT, DOWN, LEFT, UP
+from SeaGameEnv.sea_game import Ship, NOMOVE, RIGHT, DOWN, LEFT, UP, Tank
 
 
 def tank2_weighted_tank(elem):
@@ -27,7 +27,7 @@ for i in range(0, 128):
     DIST_Y[-i] = -i
 
 # 各探索モードの割合
-MODE_PROB = np.array([5, 5, 4, 0, 3, 3])
+MODE_PROB = np.array([5, 5, 4, 0, 3])
 # 和が1になるように
 MODE_PROB = MODE_PROB / sum(MODE_PROB)
 
@@ -35,9 +35,8 @@ MODE_WEIGHTED_NEAR = 0  # スコア重み付け距離
 MODE_NEAR = 1  # 距離
 MODE_NEAR_BIGGEST = 2  # スコアの高いもの優先で近いもの
 MODE_RANDOM = 3  # ランダム
-MODE_ESCAPE_4DIR = 4  # 他の船から離れつつスコア重み付け距離
-MODE_WEIGHTED_4DIR = 5  # 4方向に関して重み付けを合計して移動
-MODES = np.arange(6)
+MODE_WEIGHTED_4DIR = 4  # 4方向に関して重み付けを合計して移動
+MODES = np.arange(5)
 
 QUAD_RIGHT = 0
 QUAD_DOWN = 1
@@ -46,12 +45,12 @@ QUAD_UP = 3
 
 # 各方向マスクの定義
 mask_default = np.zeros((256, 256))
-y, x = np.ogrid[0:256, 0:256]
-mask_r = (128 - np.abs(y - 128)) - (128 - (x - 128)) >= 0
+tmp_y, tmp_x = np.ogrid[0:256, 0:256]
+mask_r = (128 - np.abs(tmp_y - 128)) - (128 - (tmp_x - 128)) >= 0
 MASK_R = mask_default.copy()
 MASK_R[mask_r] = 1
 
-mask_l = (128 - np.abs(y - 128)) - (128 + (x - 128)) > 0
+mask_l = (128 - np.abs(tmp_y - 128)) - (128 + (tmp_x - 128)) > 0
 MASK_L = mask_default.copy()
 MASK_L[mask_l] = 1
 
@@ -82,15 +81,13 @@ class ShipAgent(Ship):
         self.mode = np.random.choice(MODES, p=MODE_PROB)
         self.add_name = 'm' + str(self.mode)
 
-    def decide_move(self, ship_map, tank_map: np.ndarray):
+    def decide_move(self, ship_list: List[Ship], tank_list: List[Tank]):
         # 自分中心に回転
         # ship_map = np.roll(ship_map, 128-self.x, axis=1)
         # ship_map = np.roll(ship_map, 128-self.y, axis=0)
         # tank_map = np.roll(tank_map, 128-self.x, axis=1)
         # tank_map = np.roll(tank_map, 128-self.y, axis=0)
 
-        # 自分の座標は0
-        ship_map[self.pos[0]][self.pos[0]] = 0
         # 10%の確率でランダム移動
         if random.random() < 0.1:
             self.next_move[0] = random.randint(0, 4)
@@ -99,30 +96,29 @@ class ShipAgent(Ship):
             self.next_move[0] = NOMOVE
             self.next_move[1] = NOMOVE
             if self.mode == MODE_WEIGHTED_NEAR:
-                self.next_move = self.decide_weighted_near(tank_map)
+                self.next_move = self.decide_weighted_near(tank_list)
             elif self.mode == MODE_NEAR:
-                self.next_move = self.decide_near(tank_map)
+                self.next_move = self.decide_near(tank_list)
             elif self.mode == MODE_NEAR_BIGGEST:
-                self.next_move = self.decide_biggest_near(tank_map)
+                self.next_move = self.decide_biggest_near(tank_list)
             elif self.mode == MODE_RANDOM:
                 self.next_move = self.decide_random()
-            elif self.mode == MODE_ESCAPE_4DIR:
-                self.next_move = self.decide_escape(ship_map, tank_map)
             elif self.mode == MODE_WEIGHTED_4DIR:
-                self.next_move = self.decide_weighted_4dir(ship_map, tank_map)
+                self.next_move = self.decide_weighted_4dir(ship_list, tank_list)
             else:
                 print('Unknown Decide mode: ' + str(self.mode))
                 self.next_move = [NOMOVE, NOMOVE]
 
-    def decide_weighted_near(self, tank_map):
+    def decide_weighted_near(self, tank_list: List[Tank]):
         best_x = -1
         best_y = -1
         best_tank = 1000000
         my_x = self.pos[1]
         my_y = self.pos[0]
-        y_index, x_index = np.where(tank_map != 0)
-        for y, x in zip(y_index, x_index):
-            tank = DIST[y - my_y][x - my_x] * 12 / tank_map[y][x]
+        for tank in tank_list:
+            x = tank.pos[1]
+            y = tank.pos[0]
+            tank = DIST[y - my_y][x - my_x] * 12 / tank.point
             if tank < best_tank:
                 best_tank = tank
                 best_x = x
@@ -133,19 +129,19 @@ class ShipAgent(Ship):
             return [NOMOVE, NOMOVE]
         return self.target_to_dir([best_y, best_x])
 
-    def decide_biggest_near(self, tank_map):
+    def decide_biggest_near(self, tank_list: List[Tank]):
         best_x = -1
         best_y = -1
         best_dist = 10000
         best_tank = -100
         my_x = self.pos[1]
         my_y = self.pos[0]
-        y_index, x_index = np.where(tank_map != 0)
-        for y, x in zip(y_index, x_index):
-            tank = tank_map[y][x]
+        for tank in tank_list:
+            x = tank.pos[1]
+            y = tank.pos[0]
             dist = DIST[y - my_y][x - my_x]
-            if tank >= best_tank and dist < best_dist:
-                best_tank = tank
+            if tank.point >= best_tank and dist < best_dist:
+                best_tank = tank.point
                 best_dist = dist
                 best_x = x
                 best_y = y
@@ -155,17 +151,18 @@ class ShipAgent(Ship):
             return [NOMOVE, NOMOVE]
         return self.target_to_dir([best_y, best_x])
 
-    def decide_near(self, tank_map):
+    def decide_near(self, tank_list: List[Tank]):
         best_x = -1
         best_y = -1
-        best_tank = 1000000
-        y_index, x_index = np.where(tank_map != 0)
+        best_dist = 1000000
         my_x = self.pos[1]
         my_y = self.pos[0]
-        for y, x in zip(y_index, x_index):
-            tank = DIST[y - my_y][x - my_x]
-            if tank < best_tank:
-                best_tank = tank
+        for tank in tank_list:
+            x = tank.pos[1]
+            y = tank.pos[0]
+            dist = DIST[y - my_y][x - my_x]
+            if dist < best_dist:
+                best_dist = dist
                 best_x = x
                 best_y = y
 
@@ -178,59 +175,31 @@ class ShipAgent(Ship):
     def decide_random():
         return [random.randint(0, 4), random.randint(0, 4)]
 
-    def decide_escape(self, ship_map, tank_map):
-        quad_score = np.zeros(4)
-        my_x = self.pos[1]
-        my_y = self.pos[0]
-        y_index, x_index = np.where(ship_map != 0)
-        for y, x in zip(y_index, x_index):
-            dy = DIST_X[y - my_y]
-            dx = DIST_X[x - my_x]
-            quad = self.get_quadrant(dy, dx)
-            quad_score[quad] = quad_score[quad] + 1
-
-        quad_list = np.argsort(quad_score)
-        best_x = -1
-        best_y = -1
-        best_tank = 1000000
-        if y_index.size != 0:
-            # TOP4 方向についてループ
-            for quad_rank in range(0, 4):
-                y_index, x_index = np.where(tank_map*QUAD_MASK[quad_list[quad_rank]] != 0)
-                for y, x in zip(y_index, x_index):
-                    tank = DIST[y - my_y][x - my_x] * 12 / tank_map[y][x]
-                    if tank < best_tank:
-                        best_tank = tank
-                        best_x = x
-                        best_y = y
-                # 指定方向に(最低一つ)タンクが見つかったら終了
-                if best_x != -1:
-                    break
-        else:
-            # タンクがない
-            return [NOMOVE, NOMOVE]
-        return self.target_to_dir([best_y, best_x])
-
-    def decide_weighted_4dir(self, ship_map, tank_map):
+    def decide_weighted_4dir(self, ship_list: List[Ship], tank_list: List[Tank]):
         dir_point = np.zeros(4)
         my_x = self.pos[1]
         my_y = self.pos[0]
-        for quad in range(0, 4):
-            # 敵船がいたら距離に応じてポイント
-            y_index, x_index = np.where((ship_map * QUAD_MASK[quad]) != 0)
-            for y, x in zip(y_index, x_index):
-                dx = DIST_X[x - my_x]
-                dy = DIST_X[y - my_y]
-                # 遠くで0点 近くで4点マイナス(最遠点でx128ますy128ます = 256)
-                dir_point[quad] = dir_point[quad] - (4 - 4 * ((dx + dy) / 256))
+        # 敵船がいたら距離に応じてポイント
+        #y_index, x_index = np.where((ship_map * QUAD_MASK[quad]) != 0)
+        #for y, x in zip(y_index, x_index):
+        for ship in ship_list:
+            x = ship.pos[1]
+            y = ship.pos[0]
+            dx = DIST_X[x - my_x]
+            dy = DIST_X[y - my_y]
+            quad = self.get_quadrant(dy, dx)
+            # 遠くで0点 近くで4点マイナス(最遠点でx128ますy128ます = 256)
+            dir_point[quad] = dir_point[quad] - (4 - 4 * ((dx + dy) / 256))
 
-            # タンクがあったらプラスポイント
-            y_index, x_index = np.where((tank_map * QUAD_MASK[quad]) != 0)
-            for y, x in zip(y_index, x_index):
-                dx = DIST_X[x - my_x]
-                dy = DIST_X[y - my_y]
-                # 遠くで容量x1点 近くで容量x4点プラス
-                dir_point[quad] = dir_point[quad] + (4 - 4 * ((dx + dy) / 256)) * tank_map[y][x] * 5
+        # タンクがあったらプラスポイント
+        for tank in tank_list:
+            x = tank.pos[1]
+            y = tank.pos[0]
+            dx = DIST_X[x - my_x]
+            dy = DIST_X[y - my_y]
+            quad = self.get_quadrant(dy, dx)
+            # 遠くで容量x1点 近くで容量x4点プラス
+            dir_point[quad] = dir_point[quad] + (4 - 4 * ((dx + dy) / 256)) * tank.point * 5
         dir = dir_point.argmax()
         return [dir, dir]
 

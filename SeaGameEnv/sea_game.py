@@ -3,8 +3,11 @@ from time import sleep
 from typing import List
 
 import numpy as np
+import skimage.measure
 import gym
+import skimage
 from gym import spaces, logger
+from numba import jit
 from numpy.core.multiarray import ndarray
 
 
@@ -71,7 +74,7 @@ class SeaGameEnv(gym.core.Env):
     ship_list: List[Ship]
     tank_list: List[Tank]
 
-    def __init__(self, nb_npc=5, max_step=None, npc_name='*', player_name='Admiral', pool=8):
+    def __init__(self, nb_npc=5, max_step=None, npc_name='*', player_name='Admiral', ship_pool=8, tank_pool=8):
         self.map = np.zeros((256, 512))
         self.ship_map = self.map[:, :256]
         self.tank_map = self.map[:, 256:]
@@ -82,7 +85,8 @@ class SeaGameEnv(gym.core.Env):
         self.no_penalty_step = 0
         self.is_test = False
         self.seed_value = None
-        self.pool = pool
+        self.ship_pool = ship_pool
+        self.tank_pool = tank_pool
         if max_step:
             self.max_step = max_step
         else:
@@ -92,7 +96,10 @@ class SeaGameEnv(gym.core.Env):
         self.ship_list = [Ship(player_name)] + [ShipAgent(npc_name + str(i + 1)) for i in range(nb_npc)]
 
         self.action_space = gym.spaces.Discrete(len(ACTION_MEANS))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(256//self.pool, 512//self.pool, 1), dtype=np.float32)
+        #self.observation_space = gym.spaces.Box(low=0, high=1,
+        #                                        shape=(256//self.ship_pool + 256//self.tank_pool,
+        #                                               256//self.ship_pool + 256//self.tank_pool, 1), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=0, high=5, shape=((256//self.ship_pool)**2 + (256//self.tank_pool)**2,), dtype=np.int64)
         self.obs = self.observe()
 
     def step(self, action: int):
@@ -103,7 +110,7 @@ class SeaGameEnv(gym.core.Env):
         # NPC移動
         ship: ShipAgent
         for ship in self.ship_list[1:]:
-            ship.decide_move(self.ship_map, self.tank_map)
+            ship.decide_move(self.ship_list, self.tank_list)
             ship.move(ship.next_move)
 
         self.collide()
@@ -166,19 +173,31 @@ class SeaGameEnv(gym.core.Env):
         for tank in self.tank_list:
             self.tank_map[tank.pos] = self.tank_map[tank.pos] + tank.point
 
-    def observe(self):
+    def get_map(self):
         x = self.ship_list[0].pos[1]
         y = self.ship_list[0].pos[0]
         ship_map = np.roll(self.ship_map, 128-x, axis=1)
         ship_map = np.roll(ship_map, 128-y, axis=0)
         tank_map = np.roll(self.tank_map, 128-x, axis=1)
         tank_map = np.roll(tank_map, 128-y, axis=0)
-        XK = 256//self.pool
-        ship_map = ship_map[:XK*self.pool, :XK*self.pool].reshape(XK, self.pool, XK, self.pool).sum(axis=(1, 3))
-        tank_map = tank_map[:XK*self.pool, :XK*self.pool].reshape(XK, self.pool, XK, self.pool).sum(axis=(1, 3))
+        return ship_map, tank_map
+
+    def observe(self):
+        ship_map, tank_map = self.get_map()
+
+        XK = 256//self.ship_pool
+        ship_map = ship_map[:XK*self.ship_pool, :XK*self.ship_pool]\
+            .reshape(XK, self.ship_pool, XK, self.ship_pool)\
+            .sum(axis=(1, 3))
+        XK = 256//self.tank_pool
+        tank_map = tank_map[:XK*self.tank_pool, :XK*self.tank_pool]\
+            .reshape(XK, self.tank_pool, XK, self.tank_pool)\
+            .sum(axis=(1, 3))
+
         #self.screen.draw_ship_map(ship_map)
         #self.screen.draw_tank_map(tank_map)
-        return np.hstack((ship_map, tank_map))
+        # 一列に並べるflatten
+        return np.hstack((ship_map.reshape([(256//self.ship_pool)**2]), tank_map.reshape([(256//self.tank_pool)**2])))
 
     def seed(self, seed=None):
         random.seed(seed)
