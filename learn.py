@@ -36,15 +36,16 @@ K.set_session(sess)
 
 if __name__ == '__main__':
     env = SeaGameEnv(nb_npc=5, max_step=600,
-                     ship_pool=2, tank_pool=16)
+                     ship_pool=4, tank_pool=8)
     nb_actions = env.action_space.n
     shape = (1, ) + env.observation_space.shape
     print(shape)
 
     model = Sequential()
-    model.add(Dense(256, input_shape=shape))
-    model.add(Activation('relu'))
+    model.add(Flatten(input_shape=shape))
     model.add(Dense(128))
+    model.add(Activation('relu'))
+    model.add(Dense(256))
     model.add(Activation('relu'))
     model.add(Dense(nb_actions))
     model.add(Activation('linear'))
@@ -59,13 +60,13 @@ if __name__ == '__main__':
     logger = EpisodeLogger()
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=3000, policy=policy,
-                   train_interval=3000, enable_double_dqn=True, gamma=0.95, target_model_update=0.01)
+                   train_interval=3000, enable_double_dqn=True, gamma=0.6, target_model_update=0.01)
     dqn.compile(Adam(lr=0.001), metrics=['mae'])
 
     if os.path.exists(WEIGHT_FILE):
         dqn.load_weights(WEIGHT_FILE)
 
-    history = dqn.fit(env, callbacks=[logger, FileLogger('log.json')], nb_steps=600*1500, visualize=False, verbose=2, log_interval=600)
+    history = dqn.fit(env, callbacks=[logger, FileLogger('log.json')], nb_steps=600*4000, visualize=False, verbose=2, log_interval=600)
 
     plt.plot(logger.rewards.values())
     plt.xlabel("episode")

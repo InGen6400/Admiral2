@@ -41,9 +41,9 @@ def data():
 
 
 def param_model():
-    ship_pool = {{choice([2, 4, 8, 16])}}
-    tank_pool = {{choice([2, 4, 8])}}
-    dense_num = {{choice([32, 64, 128, 256, 512])}}
+    ship_pool = {{choice([8, 16, 32])}}
+    tank_pool = {{choice([8, 16, 32])}}
+    dense_num = {{choice([64, 128, 256, 512])}}
     eps = {{uniform(0, 1)}}
     gamma = {{uniform(0, 1)}}
     MODEL_HDF5 = 'model'
@@ -57,7 +57,7 @@ def param_model():
     model.add(Flatten(input_shape=shape))
     model.add(Dense(dense_num))
     model.add(Activation('relu'))
-    model.add(Dense(128))
+    model.add(Dense(256))
     model.add(Activation('relu'))
     model.add(Dense(nb_actions))
     model.add(Activation('linear'))
@@ -76,7 +76,7 @@ def param_model():
 
     total_reward = np.sum(rtn2.history['episode_reward'])
 
-    dqn.model.save(MODEL_HDF5 + '_{}_{}_{}_{.3g}_{.3g}'.format(ship_pool, tank_pool, dense_num, eps, gamma) + '.h5')
+    dqn.model.save(MODEL_HDF5 + '_{}_{}_{}_{:.3f}_{:.3f}'.format(ship_pool, tank_pool, dense_num, eps, gamma) + '.h5')
 
     print(model.summary())
     print('ship_pool: ' + str(ship_pool))
@@ -94,7 +94,7 @@ def start_param():
     best_run, best_model = optim.minimize(model=param_model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=30,
+                                          max_evals=10,
                                           trials=Trials(),
                                           eval_space=True)
     print("Best performing model chosen hyper-parameters:")
