@@ -27,7 +27,7 @@ for i in range(0, 128):
     DIST_Y[-i] = -i
 
 # 各探索モードの割合
-MODE_PROB = np.array([5, 5, 4, 0, 3])
+MODE_PROB = np.array([14, 12, 8, 0, 6, 1, 1, 1])
 # 和が1になるように
 MODE_PROB = MODE_PROB / sum(MODE_PROB)
 
@@ -36,7 +36,10 @@ MODE_NEAR = 1  # 距離
 MODE_NEAR_BIGGEST = 2  # スコアの高いもの優先で近いもの
 MODE_RANDOM = 3  # ランダム
 MODE_WEIGHTED_4DIR = 4  # 4方向に関して重み付けを合計して移動
-MODES = np.arange(5)
+MODE_LEFT = 5
+MODE_UP = 6
+MODE_DIAG = 7
+MODES = np.arange(8)
 
 QUAD_RIGHT = 0
 QUAD_DOWN = 1
@@ -105,6 +108,12 @@ class ShipAgent(Ship):
                 self.next_move = self.decide_random()
             elif self.mode == MODE_WEIGHTED_4DIR:
                 self.next_move = self.decide_weighted_4dir(ship_list, tank_list)
+            elif self.mode == MODE_LEFT:
+                self.next_move = [LEFT, LEFT]
+            elif self.mode == MODE_UP:
+                self.next_move = [UP, UP]
+            elif self.mode == MODE_DIAG:
+                self.next_move = [UP, RIGHT]
             else:
                 print('Unknown Decide mode: ' + str(self.mode))
                 self.next_move = [NOMOVE, NOMOVE]
@@ -223,12 +232,20 @@ class ShipAgent(Ship):
 
         # 二回目の移動
         if abs(dx) < 10 and abs(dy) < 10:
+            # ターゲット獲得可能位置なので動かない
             ret[1] = NOMOVE
+        else:
             if abs(dx) > abs(dy):
                 if dx < 0:
                     ret[1] = LEFT
                 else:
                     ret[1] = RIGHT
+            else:
+                if dy < 0:
+                    ret[1] = DOWN
+                else:
+                    ret[1] = UP
+
         return ret
 
     @staticmethod

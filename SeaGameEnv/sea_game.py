@@ -9,6 +9,7 @@ import skimage
 from gym import spaces, logger
 from numba import jit
 from numpy.core.multiarray import ndarray
+import multiprocessing as mp
 
 
 DIR_2_VECTOR: ndarray = np.array([

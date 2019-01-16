@@ -1,14 +1,15 @@
-import sys
-from copy import deepcopy
-from time import sleep
+import queue
+from collections import deque
 
-import numpy as np
+a = deque(maxlen=5)
+a.append(1)
+a.append(2)
+a.append(3)
+a.append(4)
+a.append(5)
+a.append(6)
+a.append(7)
 
-a = np.arange(8*8).reshape([8, 8])
-b = np.arange(8*8, 8*8+8*8).reshape([8, 8])
 print(a)
-print(b)
-
-out = np.hstack((np.reshape(a, [64]), np.reshape(b, [64])))
-
-print(out)
+print(sum(a))
+print(len(a))
