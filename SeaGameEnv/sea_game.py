@@ -241,18 +241,11 @@ class SeaGameEnv(gym.core.Env):
 ACTION_MEANS = [
     [RIGHT, RIGHT],
     [RIGHT, DOWN],
-    [RIGHT, LEFT],
     [RIGHT, UP],
-    [DOWN, RIGHT],
     [DOWN, DOWN],
     [DOWN, LEFT],
-    [DOWN, UP],
-    [LEFT, RIGHT],
-    [LEFT, DOWN],
     [LEFT, LEFT],
     [LEFT, UP],
-    [UP, RIGHT],
-    [UP, DOWN],
-    [UP, LEFT],
     [UP, UP],
+    [NOMOVE, NOMOVE]
 ]

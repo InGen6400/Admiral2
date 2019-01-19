@@ -72,16 +72,16 @@ def learn_episode(episode, ship_pool, tank_pool, dense_unit1=0, dense_unit2=0, d
 if __name__ == '__main__':
     episode = 100000
 
-    ship_pool = 2
-    tank_pool = 2
-    dense1 = 1024
-    dense2 = 512
-    dense3 = 128
+    ship_pool = 4
+    tank_pool = 4
+    dense1 = 512
+    dense2 = 256
+    dense3 = 0
 
-    save_file = './saves/save_{}_{}_{}_{}_{}'\
+    save_file = './saves/save-action_{}_{}_{}_{}_{}'\
         .format(ship_pool, tank_pool, dense1, dense2, dense3)
     os.makedirs(save_file, exist_ok=True)
-    logger = [TensorBoard(log_dir='./logs/model_'
+    logger = [TensorBoard(log_dir='./logs/model-action_'
                                   + str(ship_pool)+'_'
                                   + str(tank_pool)+'_'
                                   + str(dense1)+'_'
