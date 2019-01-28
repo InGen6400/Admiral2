@@ -62,7 +62,7 @@ def learn_episode(episode, ship_pool, tank_pool, dense_unit1=0, dense_unit2=0, d
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=3000, policy=policy,
                    train_interval=3000, enable_double_dqn=True, gamma=0.75, target_model_update=0.01)
-    dqn.compile(Adam(lr=0.0001), metrics=['mae'])
+    dqn.compile(Adam(lr=0.0005), metrics=['mae'])
 
     history = dqn.fit(env, callbacks=loggers, nb_steps=600*episode, visualize=False, verbose=2, log_interval=600)
 
@@ -74,14 +74,14 @@ if __name__ == '__main__':
 
     ship_pool = 4
     tank_pool = 4
-    dense1 = 512
-    dense2 = 256
-    dense3 = 0
+    dense1 = 256
+    dense2 = 128
+    dense3 = 64
 
-    save_file = './saves/save-action_{}_{}_{}_{}_{}'\
+    save_file = './saves/save-action_{}_{}_{}_{}_{}_lr5'\
         .format(ship_pool, tank_pool, dense1, dense2, dense3)
     os.makedirs(save_file, exist_ok=True)
-    logger = [TensorBoard(log_dir='./logs/model-action_'
+    logger = [TensorBoard(log_dir='./logs/model-action-lr5_'
                                   + str(ship_pool)+'_'
                                   + str(tank_pool)+'_'
                                   + str(dense1)+'_'
