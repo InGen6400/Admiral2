@@ -81,7 +81,7 @@ if __name__ == '__main__':
     save_file = './saves/save-agent_{}_{}_{}_{}_{}_lr5'\
         .format(ship_pool, tank_pool, dense1, dense2, dense3)
     os.makedirs(save_file, exist_ok=True)
-    logger = [TensorBoard(log_dir='./logs/model-action-lr5_'
+    logger = [TensorBoard(log_dir='./logs/model-agent-lr5_'
                                   + str(ship_pool)+'_'
                                   + str(tank_pool)+'_'
                                   + str(dense1)+'_'

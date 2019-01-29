@@ -83,7 +83,7 @@ class ShipAgent(Ship):
         self.next_move[0] = NOMOVE
         self.next_move[1] = NOMOVE
         self.mode = np.random.choice(MODES, p=MODE_PROB)
-        self.use_LoopedWall = np.random.choice([True, False], p=[7, 3])
+        self.use_LoopedWall = np.random.choice([True, False], p=[0.7, 0.3])
         self.add_name = 'm' + str(self.mode)
 
     def decide_move(self, ship_list: List[Ship], tank_list: List[Tank]):
