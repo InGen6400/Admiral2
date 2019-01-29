@@ -216,6 +216,15 @@ class ShipAgent(Ship):
         ret = [NOMOVE, NOMOVE]
         dx = target_pos[1] - self.pos[1]
         dy = target_pos[0] - self.pos[0]
+        if dx > 128: 
+            dx = dx - 256
+        if dx < -128: 
+            dx = dx + 256
+        if dy > 128: 
+            dy = dy - 256
+        if dy < -128: 
+            dy = dy + 256
+        
         # X移動のほうが遠い
         if abs(dx) > abs(dy):
             if dx < 0:

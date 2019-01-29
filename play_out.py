@@ -25,7 +25,7 @@ def compute_batch_q_values(model, state_batch):
 
 model = load_model(MODEL_HDF5)
 
-env = SeaGameEnv(nb_npc=5, max_step=600, ship_pool=8, tank_pool=8)
+env = SeaGameEnv(nb_npc=5, max_step=600, ship_pool=4, tank_pool=4)
 obs = env.reset()
 env.render()
 while True:
@@ -34,6 +34,6 @@ while True:
     obs, reward, done, _ = env.step(action)
     obs = deepcopy(obs)
     env.render()
-    sleep(0.2)
+    sleep(0.5)
     if done:
         env.reset()
