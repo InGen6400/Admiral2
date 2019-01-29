@@ -74,6 +74,7 @@ class ShipAgent(Ship):
         self.next_move = [NOMOVE] * 2
         self.mode = np.random.choice(MODES, p=MODE_PROB)
         self.add_name = 'm' + str(self.mode)
+        self.use_LoopedWall = True
         super().__init__(name)
 
     def reset(self):
@@ -82,6 +83,7 @@ class ShipAgent(Ship):
         self.next_move[0] = NOMOVE
         self.next_move[1] = NOMOVE
         self.mode = np.random.choice(MODES, p=MODE_PROB)
+        self.use_LoopedWall = np.random.choice([True, False], p=[6, 4])
         self.add_name = 'm' + str(self.mode)
 
     def decide_move(self, ship_list: List[Ship], tank_list: List[Tank]):
@@ -216,14 +218,15 @@ class ShipAgent(Ship):
         ret = [NOMOVE, NOMOVE]
         dx = target_pos[1] - self.pos[1]
         dy = target_pos[0] - self.pos[0]
-        if dx > 128: 
-            dx = dx - 256
-        if dx < -128: 
-            dx = dx + 256
-        if dy > 128: 
-            dy = dy - 256
-        if dy < -128: 
-            dy = dy + 256
+        if self.use_LoopedWall:
+            if dx > 128:
+                dx = dx - 256
+            if dx < -128:
+                dx = dx + 256
+            if dy > 128:
+                dy = dy - 256
+            if dy < -128:
+                dy = dy + 256
         
         # X移動のほうが遠い
         if abs(dx) > abs(dy):

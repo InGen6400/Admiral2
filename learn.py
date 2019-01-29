@@ -74,11 +74,11 @@ if __name__ == '__main__':
 
     ship_pool = 4
     tank_pool = 4
-    dense1 = 256
+    dense1 = 128
     dense2 = 128
     dense3 = 64
 
-    save_file = './saves/save-action_{}_{}_{}_{}_{}_lr5'\
+    save_file = './saves/save-agent_{}_{}_{}_{}_{}_lr5'\
         .format(ship_pool, tank_pool, dense1, dense2, dense3)
     os.makedirs(save_file, exist_ok=True)
     logger = [TensorBoard(log_dir='./logs/model-action-lr5_'
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                                   + str(dense2)+'_'
                                   + str(dense3),
                           write_graph=False, write_images=True),
-              EpisodeLogger(file_path=save_file, model_save_interval=500)]
+              EpisodeLogger(file_path=save_file, model_save_interval=1000)]
 
     '''
     if os.path.exists(MODEL_HDF5):
