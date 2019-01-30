@@ -186,14 +186,16 @@ class SeaGameEnv(gym.core.Env):
     def observe(self):
         ship_map, tank_map = self.get_map()
 
-        XK = 256//self.ship_pool
-        ship_map = ship_map[:XK*self.ship_pool, :XK*self.ship_pool]\
-            .reshape(XK, self.ship_pool, XK, self.ship_pool)\
-            .sum(axis=(1, 3))
-        XK = 256//self.tank_pool
-        tank_map = tank_map[:XK*self.tank_pool, :XK*self.tank_pool]\
-            .reshape(XK, self.tank_pool, XK, self.tank_pool)\
-            .sum(axis=(1, 3))
+        if self.ship_pool != 1:
+            XK = 256//self.ship_pool
+            ship_map = ship_map[:XK*self.ship_pool, :XK*self.ship_pool]\
+                .reshape(XK, self.ship_pool, XK, self.ship_pool)\
+                .sum(axis=(1, 3))
+        if self.tank_pool != 1:
+            XK = 256//self.tank_pool
+            tank_map = tank_map[:XK*self.tank_pool, :XK*self.tank_pool]\
+                .reshape(XK, self.tank_pool, XK, self.tank_pool)\
+                .sum(axis=(1, 3))
 
         #self.screen.draw_ship_map(ship_map)
         #self.screen.draw_tank_map(tank_map)
