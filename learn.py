@@ -72,11 +72,11 @@ def learn_episode(episode, ship_pool, tank_pool, dense_unit1=0, dense_unit2=0, d
 if __name__ == '__main__':
     episode = 100000
 
-    ship_pool = 1
-    tank_pool = 1
-    dense1 = 128
-    dense2 = 64
-    dense3 = 32
+    ship_pool = 4
+    tank_pool = 4
+    dense1 = 2048
+    dense2 = 512
+    dense3 = 128
 
     save_file = './saves/save-agent_{}_{}_{}_{}_{}_lr5'\
         .format(ship_pool, tank_pool, dense1, dense2, dense3)

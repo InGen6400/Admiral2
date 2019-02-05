@@ -200,7 +200,10 @@ class SeaGameEnv(gym.core.Env):
         #self.screen.draw_ship_map(ship_map)
         #self.screen.draw_tank_map(tank_map)
         # 一列に並べるflatten
-        return np.hstack((ship_map.reshape([(256//self.ship_pool)**2]), tank_map.reshape([(256//self.tank_pool)**2])))
+        if self.tank_pool != 1 or self.ship_pool != 1:
+            return np.hstack((ship_map.reshape([(256//self.ship_pool)**2]), tank_map.reshape([(256//self.tank_pool)**2])))
+        else:
+            return np.hstack((ship_map.reshape([256*256]), tank_map.reshape([256*256])))
 
     def seed(self, seed=None):
         random.seed(seed)
