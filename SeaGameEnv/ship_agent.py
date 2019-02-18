@@ -27,7 +27,8 @@ for i in range(0, 128):
     DIST_Y[-i] = -i
 
 # 各探索モードの割合
-MODE_PROB = np.array([14, 12, 8, 0, 6, 1, 1, 1])
+#MODE_PROB = np.array([14, 12, 8, 0, 6, 1, 1, 1])
+MODE_PROB = np.array([14, 8, 6, 0, 0, 0, 0, 0])
 # 和が1になるように
 MODE_PROB = MODE_PROB / sum(MODE_PROB)
 

@@ -32,7 +32,7 @@ K.set_session(sess)
 
 
 def learn_episode(episode, ship_pool, tank_pool, dense_unit1=0, dense_unit2=0, dense_unit3=0, loggers=None, model=None):
-    env = SeaGameEnv(nb_npc=5, max_step=600,
+    env = SeaGameEnv(nb_npc=1, max_step=400,
                      ship_pool=ship_pool, tank_pool=tank_pool)
     nb_actions = env.action_space.n
     shape = (1, ) + env.observation_space.shape
@@ -74,14 +74,14 @@ if __name__ == '__main__':
 
     ship_pool = 4
     tank_pool = 4
-    dense1 = 2048
-    dense2 = 512
-    dense3 = 128
+    dense1 = 256
+    dense2 = 128
+    dense3 = 64
 
-    save_file = './saves/save-agent_{}_{}_{}_{}_{}_lr5'\
+    save_file = './saves/save-2agent_{}_{}_{}_{}_{}_lr5'\
         .format(ship_pool, tank_pool, dense1, dense2, dense3)
     os.makedirs(save_file, exist_ok=True)
-    logger = [TensorBoard(log_dir='./logs/model-agent-lr5_'
+    logger = [TensorBoard(log_dir='./logs/model-2agent-lr5_'
                                   + str(ship_pool)+'_'
                                   + str(tank_pool)+'_'
                                   + str(dense1)+'_'
